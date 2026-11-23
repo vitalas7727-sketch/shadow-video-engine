@@ -1,33 +1,43 @@
-# Shadow Video Engine — Prototype 0.1
+# Shadow Video Engine 0.2 — кинематографическая студия
 
-A tiny cloud video-rendering engine for Android-first workflows. The first prototype turns one image into a 720p cinematic MP4 with slow camera zoom/pan, atmospheric fog, floating particles, and a title. Optional music can be added as `assets/music.mp3`.
+Русскоязычное PWA-приложение для Android-first работы. Интерфейс загружает кадр и музыкальный файл в репозиторий, запускает GitHub Actions, а облачный рендер вызывает Kling 2.6 Pro через fal.ai, синтезирует русскую речь через Edge TTS и собирает MP4 через FFmpeg.
 
-## Run in GitHub Actions (phone-friendly)
-1. Create a **new public** GitHub repository named `shadow-video-engine`. Do not modify the Forge of Shadows repo.
-2. Upload these project files to the new repository (keep `.github/workflows/render.yml`).
-3. Put a scene image at `assets/scene.png` (replace the included sample image). Optional: add `assets/music.mp3`.
-4. Open **Actions → Render Shadow Video → Run workflow**. Choose title, duration (5–30 seconds), zoom (1.0–1.5), and pan (-1..1).
-5. Wait for the green run, open it, and download the artifact `shadow-video-N`. The MP4 is available inside the ZIP.
+## Возможности
+- Установка как PWA на Android (собственная кинематографическая эмблема).
+- Загрузка исходного изображения и необязательной музыкальной дорожки.
+- Промпт сцены, длительность 5/10 секунд, визуальные пресеты.
+- Русский нейросетевой голос: Дмитрий, Светлана, Дария.
+- Драматичная / спокойная / медленная подача.
+- Генерация реалистичного image-to-video через Kling 2.6 Pro.
+- Атмосферная звуковая подложка, сведение голоса и музыки, MP4 H.264 + AAC.
+- Файлы проекта и секреты не отправляются на сторонний сервер приложения. GitHub-токен используется браузером напрямую для GitHub API и не сохраняется в localStorage.
 
-## Defaults
-- 1280x720 (720p), 24 fps, H.264 MP4
-- Render duration: 5 seconds
-- `zoom=1.08`; pan defaults are subtle
-- Run manually only (no automatic rendering on every commit)
-- Artifact retention: 2 days to conserve storage
+## Важные внешние зависимости
+1. GitHub repository `vitalas7727-sketch/shadow-video-engine`.
+2. fal.ai account and API key. AI video generation is paid; check current pricing and balance before running.
+3. GitHub repository secret named `FAL_KEY`.
+4. Fine-grained GitHub token limited to this repository with Contents: Read and write, Actions: Read and write, Workflows: Read and write.
 
-## Optional music
-Add an audio file named `assets/music.mp3`. The renderer loops it and muxes it into the final video. Keep audio rights clear for your intended use.
+## Подключение
+1. В GitHub открой `Settings → Secrets and variables → Actions → New repository secret`.
+2. Создай секрет `FAL_KEY`, вставив ключ из https://fal.ai/dashboard/keys.
+3. В GitHub создай fine-grained token, ограниченный этим репозиторием, с правами Contents RW, Actions RW, Workflows RW.
+4. Загрузить содержимое проекта в корень репозитория и отправить commit.
+5. В `Settings → Pages` выбери Deploy from a branch → `main` → `/ (root)` → Save.
+6. Открой опубликованный Pages URL на Android в Chrome → меню → «Добавить на главный экран».
+7. В приложении вставь GitHub token, выбери кадр, опиши сцену и запусти рендер.
+8. Готовый MP4 скачивается из GitHub Actions → выбранный запуск → Artifacts.
 
-## Local render
-Requires Python 3.10+, Pillow, FFmpeg, and ffprobe.
-```bash
-pip install -r requirements.txt
-python render.py --image assets/scene.png --output output/demo.mp4 --title "Into the Shadow" --duration 5 --zoom 1.12 --pan-x 0.12 --pan-y -0.04
-```
+## Локальная структура
+- `index.html`, `styles.css`, `app.js` — интерфейс.
+- `manifest.webmanifest`, `sw.js`, `assets/icons/` — PWA и фирменная эмблема.
+- `.github/workflows/render.yml` — облачный процесс.
+- `render_ai.py` — Kling + русская речь + звуковое сведение.
 
-## Prototype boundaries
-- 30 seconds max per run for predictable render time
-- Single still image input; no character rig or generative video model
-- Fog/particles are procedural overlays; later iterations can add layered parallax, transitions, multi-scene timeline, and sound effects
-- For GitHub Free, public repositories have free standard runner usage; artifacts and private-repository usage have plan limits. Check current account billing/settings before scaling.
+## Ограничения и честные ожидания
+- Реалистичность движения зависит от исходного изображения и AI-модели. Один запуск создаёт короткий клип 5 или 10 секунд, а не полноценный многосценный фильм.
+- Kling 2.6 Pro и fal.ai тарифицируются отдельно от GitHub. Проверяй актуальные тарифы в кабинете fal.ai.
+- Русский диктор создаётся отдельным Edge TTS голосом; это нейросетевой синтез, не клонирование конкретного человека.
+- Атмосферная подложка генерируется программно. Для музыкального саундтрека можно загрузить собственную дорожку, права на которую у тебя есть.
+- В текущей конфигурации репозиторий публичный: загруженные исходные изображения и музыкальные файлы коммитятся в него и могут быть видны всем. Не загружай личные/конфиденциальные материалы. Для приватной работы нужно перенести media/workflow в отдельный private repo или настроить приватное хранилище.\n- GitHub-токен вводится в приложении только на время открытой вкладки и не сохраняется. Не вставляй его в общедоступные устройства.
+- GitHub Actions artifacts хранятся 7 дней; скачивай готовые ролики вовремя.

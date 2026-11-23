@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#070b13">
+  <meta name="description" content="Shadow Video Engine — персональная кинематографическая студия">
+  <title>Shadow Video Engine</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a"></div><div class="ambient ambient-b"></div>
+  <header class="topbar">
+    <a class="brand" href="#" aria-label="Shadow Video Engine">
+      <img src="assets/icons/icon-192.png" alt="" class="brand-mark">
+      <span><b>SHADOW</b><small>VIDEO ENGINE</small></span>
+    </a>
+    <div class="top-actions"><span class="cloud-dot"></span><span id="connectionLabel">Студия готова</span><button class="icon-btn" id="settingsBtn" aria-label="Настройки">⚙</button></div>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> КИНЕМАТОГРАФИЧЕСКАЯ СТУДИЯ</div>
+        <h1>Создавай сцены.<br><em>Оживляй истории.</em></h1>
+        <p>Реалистичное AI-видео, голос, музыка и финальный монтаж — в одной мастерской.</p>
+        <div class="hero-tags"><span>AI VIDEO</span><span>РУССКИЙ ГОЛОС</span><span>MP4 / 720P</span></div>
+      </div>
+      <div class="hero-art"><div class="art-ring"></div><img src="assets/icons/icon-512.png" alt="Эмблема Shadow Video Engine"></div>
+    </section>
+
+    <nav class="tabs" aria-label="Разделы">
+      <button class="tab active" data-tab="create">✦ <span>Создать видео</span></button>
+      <button class="tab" data-tab="guide">◈ <span>Подключение</span></button>
+      <button class="tab" data-tab="about">⌘ <span>О студии</span></button>
+    </nav>
+
+    <section class="panel active" id="panel-create">
+      <div class="section-head"><div><div class="eyebrow">НОВЫЙ ПРОЕКТ</div><h2>Сцена и движение</h2></div><span class="step-pill">01 / 03</span></div>
+      <form id="renderForm">
+        <label class="field-label">Название проекта</label>
+        <input id="title" maxlength="80" value="Новая кинематографическая сцена" placeholder="Название проекта">
+
+        <label class="field-label">Исходное изображение <span class="required">*</span></label>
+        <label class="upload-zone" for="imageFile" id="imageDrop">
+          <input type="file" id="imageFile" accept="image/png,image/jpeg,image/webp">
+          <span class="upload-icon">＋</span><b id="imageName">Загрузить кадр или фотографию</b>
+          <small>JPG, PNG или WEBP · до 15 МБ</small>
+          <img id="imagePreview" alt="Предпросмотр исходного кадра">
+        </label>
+
+        <label class="field-label" for="prompt">Описание сцены и движения <span class="required">*</span></label>
+        <textarea id="prompt" rows="5" maxlength="1800" placeholder="Опиши, что происходит в кадре, как двигаются персонажи, окружение и камера. Например: Реалистичный ночной лес, ветер колышет ветви, камера медленно приближается к герою..."></textarea>
+        <div class="hint-row"><span>Чем конкретнее действие и камера, тем лучше результат.</span><span id="promptCount">0 / 1800</span></div>
+
+        <div class="two-col">
+          <div><label class="field-label" for="duration">Длительность</label><select id="duration"><option value="5">5 секунд</option><option value="10">10 секунд</option></select></div>
+          <div><label class="field-label" for="look">Визуальный характер</label><select id="look"><option value="cinema">Кино / фотореализм</option><option value="dark">Тёмное фэнтези</option><option value="nature">Документальная съёмка</option><option value="action">Динамичный экшен</option></select></div>
+        </div>
+
+        <div class="section-divider"><span>ГОЛОС И ЗВУК</span></div>
+        <label class="field-label" for="narration">Текст диктора</label>
+        <textarea id="narration" rows="3" maxlength="240" placeholder="Короткая реплика для клипа. Для 5 секунд — примерно до 100 знаков, для 10 секунд — до 220. Если пусто, голос не добавляется."></textarea>
+        <div class="two-col">
+          <div><label class="field-label" for="voice">Голос</label><select id="voice"><option value="ru-RU-DmitryNeural">Дмитрий · мужской</option><option value="ru-RU-SvetlanaNeural">Светлана · женский</option><option value="ru-RU-DariyaNeural">Дария · женский</option></select></div>
+          <div><label class="field-label" for="voiceMood">Подача голоса</label><select id="voiceMood"><option value="normal">Спокойная</option><option value="dramatic">Драматичная</option><option value="slow">Медленная</option></select></div>
+        </div>
+        <label class="field-label">Фоновая музыка <span class="optional">необязательно</span></label>
+        <label class="music-upload" for="musicFile"><span>♫</span><b id="musicName">Добавить свою музыкальную дорожку</b><small>MP3, WAV, M4A · до 15 МБ</small><input type="file" id="musicFile" accept="audio/mpeg,audio/wav,audio/mp4,audio/x-m4a"></label>
+        <p class="note">Если музыка не добавлена, движок создаст атмосферную звуковую подложку. При заполненном тексте будет синтезирован русский голос.</p>
+
+        <div class="section-divider"><span>ПОДКЛЮЧЕНИЕ</span></div>
+        <label class="public-consent"><input type="checkbox" id="publicConsent"><span><b>Я понимаю, что файлы будут загружены в публичный GitHub-репозиторий.</b><small>Изображения и музыка могут быть доступны другим людям. Не загружай сюда личные или конфиденциальные материалы.</small></span></label>
+        <label class="field-label" for="githubToken">GitHub Personal Access Token <span class="required">*</span></label>
+        <input id="githubToken" type="password" autocomplete="off" placeholder="Вставь токен с доступом к репозиторию">
+        <div class="hint-row"><span>Токен используется только в этой вкладке и не сохраняется.</span><button type="button" class="text-btn" id="showToken">Показать</button></div>
+
+        <button class="primary-btn" type="submit" id="renderBtn"><span>✦</span> Запустить кинематографический рендер <span class="arrow">→</span></button>
+        <div class="status-box" id="statusBox" role="status" aria-live="polite"><span class="status-light"></span><span id="statusText">Готов к созданию проекта</span></div>
+      </form>
+    </section>
+
+    <section class="panel" id="panel-guide">
+      <div class="section-head"><div><div class="eyebrow">ПЕРВЫЙ ЗАПУСК</div><h2>Подключение студии</h2></div><span class="step-pill">02 / 03</span></div>
+      <div class="guide-card"><span class="guide-number">01</span><div><h3>Добавь ключ AI-видеогенерации</h3><p>В GitHub открой репозиторий <b>shadow-video-engine</b> → Settings → Secrets and variables → Actions → New repository secret.</p><p>Имя секрета: <code>FAL_KEY</code>. Значение — API-ключ из <a href="https://fal.ai/dashboard/keys" target="_blank" rel="noopener">кабинета fal.ai</a>.</p></div></div>
+      <div class="guide-card"><span class="guide-number">02</span><div><h3>Права GitHub-токена</h3><p>Fine-grained token должен иметь доступ к репозиторию <b>shadow-video-engine</b> и права:</p><ul><li>Contents — Read and write</li><li>Actions — Read and write</li><li>Workflows — Read and write</li></ul></div></div>
+      <div class="guide-card"><span class="guide-number">03</span><div><h3>Запусти проект</h3><p>На вкладке «Создать видео» выбери изображение, опиши сцену, добавь текст диктора и нажми кнопку запуска. Приложение загрузит материалы в репозиторий и запустит облачную сборку.</p></div></div>
+      <div class="warning-card"><b>Важно о стоимости</b><p>AI-видеогенерация через fal.ai платная. Стоимость зависит от модели, длительности и тарифа. Перед первым запуском проверь баланс и цены в кабинете fal.ai. Ключ FAL_KEY не вводится в приложение — он хранится в секретах GitHub.</p></div>
+      <a class="outline-btn" href="https://github.com/vitalas7727-sketch/shadow-video-engine/actions" target="_blank" rel="noopener">Открыть историю рендеров ↗</a>
+    </section>
+
+    <section class="panel" id="panel-about">
+      <div class="section-head"><div><div class="eyebrow">О ПРОЕКТЕ</div><h2>Инструмент для историй</h2></div><span class="step-pill">03 / 03</span></div>
+      <div class="about-hero"><img src="assets/icons/icon-192.png" alt=""><div><b>SHADOW VIDEO ENGINE</b><small>КИНЕМАТОГРАФИЧЕСКАЯ МАСТЕРСКАЯ</small></div></div>
+      <p class="about-text">Shadow Video Engine — персональная студия для создания коротких кинематографических сцен. AI-модель оживляет исходный кадр, облачный движок добавляет русскую речь, музыкальную дорожку и собирает финальный MP4.</p>
+      <div class="spec-grid"><div><b>AI VIDEO</b><small>Kling 2.6 Pro</small></div><div><b>ГОЛОС</b><small>Русский Neural TTS</small></div><div><b>МОНТАЖ</b><small>FFmpeg / AAC</small></div><div><b>ФОРМАТ</b><small>MP4 / H.264</small></div></div>
+      <p class="note">Реализм и точность движения зависят от исходного кадра, текста запроса и возможностей выбранной AI-модели. Генерация может занимать несколько минут.</p>
+    </section>
+
+    <footer><span>SHADOW VIDEO ENGINE <b>0.2</b></span><span>Создано для историй без границ</span></footer>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,32 +1,45 @@
 name: Render Shadow Video
-
 on:
   workflow_dispatch:
     inputs:
-      title:
-        description: Text title on the video
-        required: false
-        default: SHADOW VIDEO ENGINE
+      image_path:
+        description: Repository path to the uploaded source image
+        required: true
+        type: string
+      prompt:
+        description: Cinematic scene and motion prompt
+        required: true
         type: string
       duration:
-        description: Duration (seconds, max 30 for prototype)
+        description: Generated clip duration
         required: true
-        default: '5'
+        default: "5"
+        type: choice
+        options: ["5", "10"]
+      title:
+        description: Project title
+        required: false
+        default: "Shadow Video Engine"
         type: string
-      zoom:
-        description: Final camera zoom (1.0-1.5)
-        required: true
-        default: '1.08'
+      narration:
+        description: Russian voice-over text (optional)
+        required: false
         type: string
-      pan_x:
-        description: Camera horizontal movement (-1 to 1)
+      voice:
+        description: Russian neural voice
         required: true
-        default: '0.08'
-        type: string
-      pan_y:
-        description: Camera vertical movement (-1 to 1)
-        required: true
-        default: '-0.04'
+        default: "ru-RU-DmitryNeural"
+        type: choice
+        options: ["ru-RU-DmitryNeural", "ru-RU-SvetlanaNeural", "ru-RU-DariyaNeural"]
+      voice_mood:
+        description: Voice delivery
+        required: false
+        default: "normal"
+        type: choice
+        options: ["normal", "dramatic", "slow"]
+      music_path:
+        description: Optional repository path to uploaded music
+        required: false
         type: string
 
 permissions:
@@ -35,37 +48,34 @@ permissions:
 jobs:
   render:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 30
     steps:
-      - name: Checkout
+      - name: Checkout project and uploaded media
         uses: actions/checkout@v4
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
-      - name: Install Python dependencies
+          python-version: "3.12"
+      - name: Install render dependencies
         run: pip install -r requirements.txt
-      - name: Render video
+      - name: Generate cinematic AI video, Russian voice and final sound mix
         env:
-          VIDEO_TITLE: ${{ inputs.title }}
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+          IMAGE_PATH: ${{ inputs.image_path }}
+          VIDEO_PROMPT: ${{ inputs.prompt }}
           VIDEO_DURATION: ${{ inputs.duration }}
-          VIDEO_ZOOM: ${{ inputs.zoom }}
-          VIDEO_PAN_X: ${{ inputs.pan_x }}
-          VIDEO_PAN_Y: ${{ inputs.pan_y }}
-        run: |
-          python render.py \
-            --image assets/scene.png \
-            --output output/shadow-video.mp4 \
-            --title "$VIDEO_TITLE" \
-            --duration "$VIDEO_DURATION" \
-            --zoom "$VIDEO_ZOOM" \
-            --pan-x "$VIDEO_PAN_X" \
-            --pan-y "$VIDEO_PAN_Y"
-      - name: Upload MP4
+          VIDEO_TITLE: ${{ inputs.title }}
+          NARRATION: ${{ inputs.narration }}
+          VOICE: ${{ inputs.voice }}
+          VOICE_MOOD: ${{ inputs.voice_mood }}
+          MUSIC_PATH: ${{ inputs.music_path }}
+        run: python render_ai.py
+      - name: Upload final MP4
         uses: actions/upload-artifact@v4
         with:
           name: shadow-video-${{ github.run_number }}
-          path: output/shadow-video.mp4
-          retention-days: 2
+          path: output/final-video.mp4
+          if-no-files-found: error
+          retention-days: 7
