@@ -67,6 +67,7 @@ def main() -> None:
     if music_path and not music_path.is_file():
         raise FileNotFoundError(f"Music file not found: {music_path}")
 
+    seconds = float(duration)
     voice_path = OUT / "voice.mp3"
     if narration:
         print("Synthesizing Russian neural voice...", flush=True)
