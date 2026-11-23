@@ -1,0 +1,71 @@
+name: Render Shadow Video
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: Text title on the video
+        required: false
+        default: SHADOW VIDEO ENGINE
+        type: string
+      duration:
+        description: Duration (seconds, max 30 for prototype)
+        required: true
+        default: '5'
+        type: string
+      zoom:
+        description: Final camera zoom (1.0-1.5)
+        required: true
+        default: '1.08'
+        type: string
+      pan_x:
+        description: Camera horizontal movement (-1 to 1)
+        required: true
+        default: '0.08'
+        type: string
+      pan_y:
+        description: Camera vertical movement (-1 to 1)
+        required: true
+        default: '-0.04'
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Render video
+        env:
+          VIDEO_TITLE: ${{ inputs.title }}
+          VIDEO_DURATION: ${{ inputs.duration }}
+          VIDEO_ZOOM: ${{ inputs.zoom }}
+          VIDEO_PAN_X: ${{ inputs.pan_x }}
+          VIDEO_PAN_Y: ${{ inputs.pan_y }}
+        run: |
+          python render.py \
+            --image assets/scene.png \
+            --output output/shadow-video.mp4 \
+            --title "$VIDEO_TITLE" \
+            --duration "$VIDEO_DURATION" \
+            --zoom "$VIDEO_ZOOM" \
+            --pan-x "$VIDEO_PAN_X" \
+            --pan-y "$VIDEO_PAN_Y"
+      - name: Upload MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadow-video-${{ github.run_number }}
+          path: output/shadow-video.mp4
+          retention-days: 2
