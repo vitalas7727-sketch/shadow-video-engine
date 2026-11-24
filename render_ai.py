@@ -45,7 +45,6 @@ def main() -> None:
             "duration": duration,
             "generate_audio": False,
             "negative_prompt": "cartoon, illustration, anime, plastic CGI, distorted anatomy, extra limbs, flicker, jitter, morphing, text, subtitles, watermark, low resolution, blurry details",
-            "cfg_scale": 0.5,
         },
         with_logs=True,
     )
