@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cloud AI video pipeline: image -> Kling 2.6 Pro -> Russian TTS -> final audio mix."""
 from __future__ import annotations
-import asyncio, os, subprocess, sys
+import asyncio, json, os, subprocess
 from pathlib import Path
 import requests
 import edge_tts
@@ -10,6 +10,24 @@ import fal_client
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "output"
 OUT.mkdir(exist_ok=True)
+
+def probe_video_dimensions(path: Path) -> tuple[int, int]:
+    result = subprocess.run(
+        ["ffprobe", "-v", "error", "-select_streams", "v:0",
+         "-show_entries", "stream=width,height", "-of", "json", str(path)],
+        capture_output=True, text=True, check=True
+    )
+    streams = json.loads(result.stdout).get("streams", [])
+    if not streams:
+        raise RuntimeError(f"No video stream found in {path}")
+    try:
+        width = int(streams[0]["width"])
+        height = int(streams[0]["height"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise RuntimeError(f"Could not read video dimensions from {path}") from exc
+    if width <= 0 or height <= 0:
+        raise RuntimeError(f"Invalid video dimensions: {width}x{height}")
+    return width, height
 
 def run(cmd: list[str]) -> None:
     print("+", " ".join(cmd[:8]), "...", flush=True)
@@ -100,6 +118,22 @@ def main() -> None:
         "-map", "[a]", "-c:a", "pcm_s16le", str(ambience)
     ])
 
+    source_width, source_height = probe_video_dimensions(raw_video)
+    if source_height > source_width:
+        target_width, target_height = 720, 1280
+    else:
+        target_width, target_height = 1280, 720
+    print(
+        f"Normalizing {source_width}x{source_height} to "
+        f"{target_width}x{target_height} at 24 FPS...",
+        flush=True,
+    )
+    video_filter = (
+        f"scale={target_width}:{target_height}:force_original_aspect_ratio=decrease:force_divisible_by=2,"
+        f"pad={target_width}:{target_height}:(ow-iw)/2:(oh-ih)/2:color=black,"
+        "setsar=1,fps=24"
+    )
+
     inputs = ["-i", str(raw_video), "-i", str(ambience)]
     mix_parts = ["[1:a]volume=0.45[amb]"]
     audio_labels = ["[amb]"]
@@ -118,11 +152,36 @@ def main() -> None:
     cmd = ["ffmpeg", "-y", "-loglevel", "error"] + inputs + [
         "-filter_complex", ";".join(mix_parts),
         "-map", "0:v:0", "-map", "[aout]", "-t", str(seconds),
-        "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+        "-vf", video_filter,
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23",
+        "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
         "-movflags", "+faststart", str(final)
     ]
     run(cmd)
-    probe = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-show_entries", "stream=codec_type,codec_name,width,height", "-of", "json", str(final)], capture_output=True, text=True, check=True)
+    probe = subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries",
+         "format=duration:stream=codec_type,codec_name,width,height,avg_frame_rate,sample_aspect_ratio,pix_fmt",
+         "-of", "json", str(final)],
+        capture_output=True, text=True, check=True
+    )
+    final_info = json.loads(probe.stdout)
+    final_video = next(
+        (stream for stream in final_info.get("streams", [])
+         if stream.get("codec_type") == "video"),
+        None,
+    )
+    if final_video is None:
+        raise RuntimeError("Final MP4 contains no video stream")
+
+    actual_width = int(final_video.get("width", 0))
+    actual_height = int(final_video.get("height", 0))
+    if (actual_width, actual_height) != (target_width, target_height):
+        raise RuntimeError(
+            f"Final video has unexpected dimensions: "
+            f"{actual_width}x{actual_height}; expected "
+            f"{target_width}x{target_height}"
+        )
+
     print("FINAL VIDEO:", probe.stdout, flush=True)
     print(f"PROJECT TITLE: {title}", flush=True)
 
